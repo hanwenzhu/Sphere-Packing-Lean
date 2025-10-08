@@ -1,3 +1,4 @@
+import BlueprintGen
 import Mathlib.Data.Rat.Star
 import Mathlib.LinearAlgebra.Dimension.Localization
 import Mathlib.NumberTheory.ModularForms.LevelOne
@@ -165,6 +166,20 @@ lemma Delta_E4_E6_aux_q_one_term : (qExpansion 1 Delta_E4_E6_aux).coeff 1 = 1 :=
   simp_rw [E4_q_exp_one, he4, E6_q_exp_one]
   ring
 
+/--
+We have $$\begin{equation}
+\Delta(z) = (E_4^3-E_6^2)/1728.
+\end{equation}$$
+-/
+@[blueprint
+  (proof := /--
+  We only need to show its a cuspform, since once we have this, dividing the rhs by $\Delta$ would
+  give a modular form of weight $0$ which is a constant, and so we can determine the constant easily.
+  
+  To check its a cuspform, we just look at the $q$-expansions of $E_4$ and $E_6$ and prove directly
+  that the first term vanishes.
+  -/)
+  (latexEnv := "lemma")]
 theorem Delta_E4_eqn : Delta = Delta_E4_E6_aux := by
   ext z
   obtain ⟨c, H⟩ := delta_eq_E4E6_const
@@ -507,11 +522,75 @@ lemma dim_modforms_lvl_one (k : ℕ) (hk : 3 ≤ (k : ℤ)) (hk2 : Even k) :
     · simp only [Nat.cast_ofNat, Int.reduceSub, dim_weight_two, add_zero, dvd_refl, ↓reduceIte]
       norm_cast
 
+attribute [blueprint
+  (statement := /--
+  Let $\Gamma$ denote a subgroup of $\mathrm{SL}_2(\mathbb{Z})$, then a modular form of level $\Gamma$
+  and weight $k \in \mathbb{Z}$ is a function $f : \mathbb{H} \to \mathbb{C}$ such that:
+  
+  1.  For all $\gamma \in \Gamma$ we have $f\mid_k \gamma = f$ (such functions are called slash
+      invariant).
+  
+  2.  $f$ is holomorphic on $\mathbb{H}$.
+  
+  3.  For all $\gamma \in \mathrm{SL}_2(\mathbb{Z})$, there exist $A, B \in \mathbb{R}$ such that for
+      all $z \in \mathbb{H}$, with $A \le \mathrm{Im}(z)$, we have $|(f \mid_k \gamma) (z) |\le B$.
+      Here $| - |$ denotes the standard complex absolute value.
+  -/)
+  (uses := ["def:congruence-subgroup"])
+  (proof := /--
+  The proof makes use of the maximum modulus principle, as its already been formalised we skipt the
+  details here but see the lean proof for details.
+  -/)
+  (latexEnv := "definition")] ModularForm
+
+/--
+Let $k \in \Z$ with $k \ge 0$ and even. Then $\dim M_k(\Gamma_1) = \lfloor k / 12 \rfloor$ if
+$k \equiv 2 \mod 12$ and $\dim M_k(\Gamma_1) = \lfloor k / 12 \rfloor + 1$ if
+$k \not\equiv 2 \mod 12$.
+-/
+@[blueprint
+  (proof := /--
+  First we note that for $2 < k$ we have $\dim(M_k(\Gamma_1)) = 1 + \dim S_k(\Gamma_1)$. This follows
+  since we know the $E_k$ are in $M_k$ so by scaling appropriately, any non-cuspform $f \in M_k$ we
+  would have $f - a E_k \in S_k$ for some $a$.
+  
+  Next, note that $S_k(\Gamma_1)$ is isomorphic to $M_{k-12}(\Gamma_1)$, since if $f \in S_k$ then
+  $f/ \Delta$ is now a modular form (using the product expansion of $\Delta$ and its non-vanishing on
+  $\mathfrak{H}$) of weight $k-12$. Note its important that $f$ is a cuspform so that the quotient by
+  $\Delta$ is a modular form.
+  
+  So we only need to know the dimensions of $M_k(\Gamma_1)$ for $0 \le k \le 12$. For $k = 0$ we have
+  $\dim M_0(\Gamma_1) = 1$ by `ModularForm`. For $k = 4$ we have $\dim M_4(\Gamma_1) = 1$ since if
+  there was a cuspform $f$ of weight $4$ then $f/ \Delta$ would be a modular form of negative weight,
+  i.e. zero, so $f=0$. Similarly for $k=6,8,10$. For $k=12$ we have $\dim S_{12}(\Gamma_1) = 1$ since
+  the discriminant form is a cusp form of weight $12$ and any other cusp form of weight $12$ would be
+  a scalar multiple of $\Delta$ (since their ratio would be a modular form of weight $0$). So we have
+  $\dim M_{12}(\Gamma_1) = 2$.
+  
+  Finally we need to check that $\dim M_2(\Gamma_1) = 0$. Firstly, there can't be any cuspforms here
+  by the same argument as above. So we need to check that there are no modular forms of weight $2$. If
+  we did have one, call it $f$ then $f^2$ would be a non-cuspform of weight $4$ and so $f^2 = a E_4$,
+  where in fact $a=a_0(f)^2$ (since $(f^2-a_0(f)E_4)$ is now a cuspform of weight $4$ which means its
+  zero). Similarly, $f^3 = a_0(f)^3 E_6$. But now taking powers to make them weight $12$ forms we see
+  that $a_0(f)^6(E_4^3 - E_6^2) = 0 = 1728 a_0(f)^6 \Delta$ but $a_0(f) \ne 0$ (since its assumed to
+  not be a cuspform), this would mean $\Delta =0$ which we know can't happen.
+  -/)]
 lemma ModularForm.dimension_level_one (k : ℕ) (hk : 3 ≤ (k : ℤ)) (hk2 : Even k) :
     Module.rank ℂ (ModularForm (CongruenceSubgroup.Gamma 1) (k)) = if 12 ∣ ((k) : ℤ) - 2 then
     Nat.floor ((k : ℚ)/ 12) else Nat.floor ((k : ℚ) / 12) + 1 := by
   apply dim_modforms_lvl_one k hk hk2
 
+/-- Let $\Gamma$ be a congruence subgroup. Then $M_k(\Gamma)$ is finite-dimensional. -/
+@[blueprint
+  (proof := /--
+  We know that $\dim(M_k(\Gamma_1))$ is finite dimensional from the above, now this means that there
+  is some $r_k$ such that any element of $M_k(\Gamma_1)$ vanishing at infinity to degree $> r_k$ must
+  be zero. Now take $f \in M_k(\Gamma)$ and vanishes to degree $n$ at infinity, then consider
+  $F = \prod_\gamma f\mid_k \gamma$ where the product is over a set of representatives of
+  $\Gamma_1 \backslash \Gamma$. Then $F$ is a modular form of weight $k d$ where
+  $d = [\Gamma_1: \Gamma]$ and vanishes at infinity to degree at least $n$. So if $n > r_{kd}$ then
+  $F=0$ meaning the $f=0$.
+  -/)]
 lemma dim_gen_cong_levels (k : ℤ) (Γ : Subgroup SL(2, ℤ)) (hΓ : Subgroup.index Γ ≠ 0) :
     FiniteDimensional ℂ (ModularForm Γ k) := by sorry
 --use the norm to turn it into a level one question.

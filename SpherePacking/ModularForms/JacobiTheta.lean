@@ -1,3 +1,4 @@
+import BlueprintGen
 import Mathlib.Algebra.Field.Power
 import Mathlib.Algebra.Lie.OfAssociative
 import Mathlib.Data.Real.StarOrdered
@@ -68,7 +69,50 @@ lemma H₂_negI_action : (H₂ ∣[(2 : ℤ)] negI.1) = H₂ := modular_slash_ne
 lemma H₃_negI_action : (H₃ ∣[(2 : ℤ)] negI.1) = H₃ := modular_slash_negI_of_even H₃ (2: ℤ) even_two
 lemma H₄_negI_action : (H₄ ∣[(2 : ℤ)] negI.1) = H₄ := modular_slash_negI_of_even H₄ (2: ℤ) even_two
 
-/-- These three transformation laws follow directly from tsum definition. -/
+/--
+These elements act on the theta functions in the following way $$\begin{align}
+    H_2 | S &= -H_4 \label{eqn:H2-transform-S} \\
+    H_3 | S &= -H_3 \label{eqn:H3-transform-S} \\
+    H_4 | S &= -H_2 \label{eqn:H4-transform-S}
+\end{align}$$ and $$\begin{align}
+    H_2 | T &= -H_2 \label{eqn:H2-transform-T} \\
+    H_3 | T &= H_4 \label{eqn:H3-transform-T} \\
+    H_4 | T &= H_3 \label{eqn:H4-transform-T}
+\end{align}$$
+
+These three transformation laws follow directly from tsum definition.
+-/
+@[blueprint
+  (uses := ["def:H2-H3-H4", "def:th00-th01-th10"])
+  (proof := /--
+  The last three identities easily follow from the definition. For example,
+  \ref{eqn:H2-transform-T} follows from $$\begin{align}
+      \Theta_{2}(z + 1) &= \sum_{n\in\Z}e^{\pi i (n+\frac12)^2 (z + 1)}
+      = \sum_{n \in \Z} e^{\pi i (n + \frac{1}{2})^{2}} e^{\pi i (n + \frac{1}{2})^{2} z} \\
+      &= \sum_{n \in \Z} e^{\pi i (n^2 + n + \frac{1}{4})} e^{\pi i (n + \frac{1}{2})^{2} z} = \sum_{n \in \Z} (-1)^{n^2 + n}e^{\pi i / 4} e^{\pi i (n + \frac{1}{2})^{2} z} \\
+      &= e^{\pi i / 4} \Theta_{2}(z)
+  \end{align}$$ and taking 4th power. \ref{eqn:H2-transform-S} and
+  \ref{eqn:H4-transform-S} are equivalent under $z \leftrightarrow -1/z$, so it
+  is enough to show \ref{eqn:H2-transform-S} and
+  \ref{eqn:H3-transform-S}. These identities follow from the identities of the
+  *two-variable* Jacobi theta function, which is defined as (be careful for the variables, where we
+  use $\tau$ instead of $z$) $$\begin{equation}
+      \theta(z, \tau) = \sum_{n \in \mathbb{Z}} e^{2 \pi i n z + \pi i n^2 \tau} \label{eqn:jacobi2}
+  \end{equation}$$ and already formalized by David Loeffler. This function specialize to the theta
+  functions as $$\begin{align}
+      \Theta_{2}(\tau) &= e^{\pi i \tau / 4} \theta(-\tau / 2, \tau) \label{eqn:Th2-as-jacobi2} \\
+      \Theta_{3}(\tau) &= \theta(0, \tau) \label{eqn:Th3-as-jacobi2} \\
+      \Theta_{4}(\tau) &= \theta(1/2, \tau) \label{eqn:Th4-as-jacobi2} \\
+  \end{align}$$
+  
+  Poisson summation formula gives $$\begin{equation}
+      \theta(z, \tau) = \frac{1}{\sqrt{-i \tau}} e^{-\frac{\pi i z^2}{\tau}} \theta\left(\frac{z}{\tau}, -\frac{1}{\tau}\right) \label{eqn:jacobi2transform}
+  \end{equation}$$ and applying the specializations above yield the identities. For example,
+  \ref{eqn:H4-transform-S} follows from $$\begin{equation}
+      \Theta_{4}(\tau) = \theta\left(\frac{1}{2}, \tau\right) = \frac{1}{\sqrt{-i\tau}} e^{- \frac{\pi i }{4 \tau}} \theta\left(\frac{1}{2 \tau}, -\frac{1}{\tau}\right) = \frac{1}{\sqrt{-i\tau}} \Theta_{2}\left(-\frac{1}{\tau}\right)
+  \end{equation}$$ and taking 4th power.
+  -/)
+  (latexEnv := "lemma")]
 lemma H₂_T_action : (H₂ ∣[(2 : ℤ)] T) = -H₂ := by
   ext x
   suffices hΘ₂ : Θ₂ ((1 : ℝ) +ᵥ x) = cexp (π * I / 4) * Θ₂ x by
@@ -243,7 +287,30 @@ lemma H₄_β_action : (H₄ ∣[(2 : ℤ)] β.1) = H₄ := calc
     rw [H₄_negI_action, H₄_S_action, neg_slash, neg_slash, α_eq_T_sq]
     simp [sq, slash_mul, H₂_T_inv_action, H₂_S_action]
 
-/-- H₂, H₃, H₄ are modular forms of weight 2 and level Γ(2) -/
+attribute [blueprint
+  (statement := /-- The chain rule implies $$F|_k\gamma_1\gamma_2=(F|_k\gamma_1)|_k\gamma_2.$$ -/)
+  (uses := [UpperHalfPlane.denom_cocycle])
+  (latexEnv := "lemma")] SlashAction.slash_mul
+
+/--
+$H_{2}$, $H_{3}$, and $H_{4}$ are slash invariant under $\Gamma(2)$, i.e. for all
+$\gamma \in \Gamma(2)$ and $i \in \{2, 3, 4\}$, we have $H_i|\gamma = H_i|\gamma^{-1} = H_i$.
+
+H₂, H₃, H₄ are modular forms of weight 2 and level Γ(2)
+-/
+@[blueprint
+  (proof := /--
+  By `Γ2_generate` and `SlashAction.slash_mul`, it suffices to show that the $H_i$ are invariant under
+  slash actions with respect to $\alpha$, $\beta$, and $-I$. Invariance under $-I$ follows from Lemma
+  `modular_slash_negI_of_even`. The rest follows from Lemma `SlashAction.slash_mul`, `H₂_T_action`,
+  and the matrix identities $$\begin{equation}
+      \alpha = T^2, \quad \beta = -S\alpha^{-1}S = -ST^{-2}S. \label{eqn:matrix}
+  \end{equation}$$ For example, invariance for $H_2$ can be proved by $$\begin{align}
+      H_2|\alpha &= H_2 |T^{2} = -H_2 |T = H_2 \\
+      H_2|\beta &= H_2 |(-S\alpha^{-1}S) = H_2 | (S\alpha^{-1}S) =-H_4 |(\alpha^{-1}S) = -H_4 |S  = H_2.
+  \end{align}$$
+  -/)
+  (latexEnv := "lemma")]
 noncomputable def H₂_SIF : SlashInvariantForm (Γ 2) 2 where
   toFun := H₂
   slash_action_eq' := slashaction_generators_Γ2 H₂ (2 : ℤ) H₂_α_action H₂_β_action H₂_negI_action
@@ -262,6 +329,13 @@ end H_SlashInvariant
 
 section H_MDifferentiable
 
+/-- $H_{2}$, $H_{3}$, and $H_{4}$ belong to $M_2(\Gamma(2))$. -/
+@[blueprint
+  (proof := /--
+  From `H₂_SIF` and `isBoundedAtImInfty_H_slash`, it remains ot prove that $H_2$, $H_3$ and $H_4$ are
+  holomorphic on $\mathbb{H}$.
+  -/)
+  (latexEnv := "lemma")]
 noncomputable def H₂_SIF_MDifferentiable : MDifferentiable 𝓘(ℂ) 𝓘(ℂ) H₂_SIF := by
   intro τ
   suffices h_diff : DifferentiableAt ℂ (↑ₕH₂) τ.val by
@@ -415,6 +489,31 @@ theorem isBoundedAtImInfty_H₄ : IsBoundedAtImInfty H₄ := by
   rw [summable_jacobiTheta₂_term_iff]
   exact z.prop
 
+/--
+For all $\gamma \in \Gamma_1$, $H_{2}|_2 \gamma$, $H_{3}|_2 \gamma$, and $H_{4}|_2 \gamma$ are
+holomorphic at $i\infty$.
+-/
+@[blueprint
+  (proof := /--
+  We want to show that for $\gamma \in \Gamma_1$, $\|H_2|_2\gamma(z)\|$ is bounded as
+  $z \in \mathbb{H} \to i\infty$. Firstly, by `H₂_T_action`, `Γ2_generate` and induction on group
+  elements, we notice that $\{\pm H_2, \pm H_3, \pm H_4\}$ is closed under action by $\Gamma_1$.
+  Hence, it suffices to prove that $H_2$, $H_3$ and $H_4$ are bounded at $i\infty$. Consider
+  $z \in \mathbb{H}$ with $\Im(z) \geq A$. We proceed by direct algebraic manipulation:
+  
+  $$\begin{align}
+    \|H_2(z)\|
+    &= \left\|\sum_{n \in \Z} \exp\left(\pi i \left(n + \frac{1}{2}\right)^2 z\right)\right\|^4
+    \leq \left(\sum_{n \in \Z} \left\|\exp\left(\pi i \left(n + \frac{1}{2}\right)^2 z\right)\right)\right\|^4 \\
+    &= \left(\sum_{n \in \Z} \left\|\exp\left(-\pi \left(n + \frac{1}{2}\right)^2 \Im(z)\right)\right)\right\|^4
+    \leq \left(\sum_{n \in \Z} \left\|\exp\left(-\pi \left(n + \frac{1}{2}\right)^2 A\right)\right)\right\|^4
+  \end{align}$$
+  
+  Where we prove the final term is convergent by noticing that it equals
+  $\exp(-\pi A / 4)\theta(iA / 2, iA)$, which has been shown to converge in `Mathlib`. The proofs for
+  $H_3$ and $H_4$ are similar (actually easier) and have been omitted.
+  -/)
+  (latexEnv := "lemma")]
 theorem isBoundedAtImInfty_H_slash : IsBoundedAtImInfty (H₂ ∣[(2 : ℤ)] γ)
       ∧ IsBoundedAtImInfty (H₃ ∣[(2 : ℤ)] γ) ∧ IsBoundedAtImInfty (H₄ ∣[(2 : ℤ)] γ) := by
   apply Subgroup.closure_induction_left (s := {S, T, ↑negI})

@@ -6,6 +6,7 @@ Authors: Sidharth Hariharan
 
 -- import Mathlib
 
+import BlueprintGen
 import SpherePacking.ForMathlib.RadialSchwartz.Multidimensional
 import SpherePacking.MagicFunction.b.Basic
 
@@ -161,8 +162,27 @@ def b' : 𝓢(ℝ, ℂ) :=
   + MagicFunction.b.SchwartzIntegrals.J₅'
   + MagicFunction.b.SchwartzIntegrals.J₆'
 
-/-- The -1-Fourier Eigenfunction of Viazovska's Magic Function. -/
-@[simps!]
+/--
+$b(x)$ is a Schwartz function.
+
+The -1-Fourier Eigenfunction of Viazovska's Magic Function.
+-/
+@[simps!, blueprint
+  (uses := ["lemma:psiS-bound"])
+  (proof := /--
+  We have $$\begin{align}
+      &\int\limits_{-1}^{i}\psi_T(z)\,e^{\pi i r^2 z}\,dz=\int\limits_{0}^{i+1}\psi_I(z)\,e^{\pi i r^2 (z-1)}\,dz=\notag\\
+      &\int\limits_{i\infty}^{-1/(i+1)}\psi_I\Big(\frac{-1}{z}\Big)\,e^{\pi i r^2 (-1/z-1)}\,z^{-2}\,dz=\int\limits_{i\infty}^{-1/(i+1)}\psi_S(z)\,z^{-4}\,e^{\pi i r^2 (-1/z-1)}\,dz.\notag
+  \end{align}$$ Using \ref{eqn:psiS-bound}, we can estimate the first summand in the
+  left-hand side of \ref{eqn:b-definition} $$\begin{equation}
+      \left|\int\limits_{-1}^i \psi_T(z)\,e^{\pi i r^2 z}\,dz \right|\leq C_1\,r\,K_1(2\pi r).
+  \end{equation}$$ We combine this inequality with analogous estimates for the other three summands
+  and obtain $$\begin{equation}
+      |b(r)|\leq C_2\,r\,K_1(2\pi r)+C_3\,\frac{e^{-\pi(r^2+1)}}{r^2+1}.
+  \end{equation}$$ Here $C_1$, $C_2$, and $C_3$ are some positive constants. Similar estimates hold
+  for all derivatives $\frac{\dd^k}{\dd^k r} b(r)$.
+  -/)
+  (latexEnv := "proposition")]
 def b : 𝓢(EuclideanSpace ℝ (Fin 8), ℂ) := schwartzMap_multidimensional_of_schwartzMap_real
   (EuclideanSpace ℝ (Fin 8)) b'
 

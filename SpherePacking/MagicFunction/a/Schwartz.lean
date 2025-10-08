@@ -8,6 +8,7 @@ M4R File
 
 -- import Mathlib
 
+import BlueprintGen
 import SpherePacking.ForMathlib.RadialSchwartz.Multidimensional
 import SpherePacking.MagicFunction.a.Basic
 
@@ -163,8 +164,30 @@ def a' : 𝓢(ℝ, ℂ) :=
   + MagicFunction.a.SchwartzIntegrals.I₅'
   + MagicFunction.a.SchwartzIntegrals.I₆'
 
-/-- The +1-Fourier Eigenfunction of Viazovska's Magic Function. -/
-@[simps!]
+/--
+$a(x)$ is a Schwartz function.
+
+The +1-Fourier Eigenfunction of Viazovska's Magic Function.
+-/
+@[simps!, blueprint
+  (uses := ["cor:phi0-bound"])
+  (proof := /--
+  We estimate the first summand in the right-hand side of \ref{eqn:a-definition}.
+  By \ref{eqn:phi0-bound}, we have $$\begin{align}
+      &\left|\int\limits_{-1}^{i}\phi_0\Big(\frac{-1}{z+1}\Big)\,(z+1)^2\,e^{\pi i r^2 z}\,dz\right|=\left|\int\limits_{i\infty}^{-1/(i+1)}\phi_0(z)\,z^{-4}\,e^{\pi i r^2 (-1/z-1)}\,dz\right|\leq \notag\\
+      &C_1\int\limits_{1/2}^{\infty}e^{-2\pi t}\,e^{-\pi    r^2/t}\,dt\leq C_1\int\limits_{0}^{\infty}e^{-2\pi t}\,e^{-\pi    r^2/t}\,dt=C_2\,r\,K_1(2\sqrt{2}\,\pi\,r)\notag
+  \end{align}$$ where $C_1$ and $C_2$ are some positive constants and $K_\alpha(x)$ is the modified
+  Bessel function of the second kind defined as in [Abramowitz], Section 9.6. This estimate also holds
+  for the second and third summand in \ref{eqn:a-definition}. For the last summand
+  we have $$\begin{equation}
+  \left|\int\limits_{i}^{i\infty}\phi_0(z)\,e^{\pi i r^2 z}\,dz\right|\leq C\,\int\limits_{1}^{\infty} e^{-2\pi t}\,e^{-\pi r^2 t}\,dt=C_3\frac{e^{\pi(r^2+2)}}{r^2+2}.
+  \end{equation}$$ Therefore, we arrive at $$\begin{equation}
+      |a(r)|\leq 4C_2\,r\,K_1(2\sqrt{2}\pi r)+2C_3\frac{e^{-\pi(r^2+2)}}{r^2+2}.
+  \end{equation}$$ It is easy to see that the left hand side of this inequality decays faster then any
+  inverse power of $r$. Analogous estimates can be obtained for all derivatives
+  $\frac{\dd^k}{\dd r^k}a(r)$.
+  -/)
+  (latexEnv := "proposition")]
 def a : 𝓢(EuclideanSpace ℝ (Fin 8), ℂ) := schwartzMap_multidimensional_of_schwartzMap_real
   (EuclideanSpace ℝ (Fin 8)) a'
 

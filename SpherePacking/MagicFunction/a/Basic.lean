@@ -6,6 +6,7 @@ Authors: Sidharth Hariharan
 M4R File
 -/
 
+import BlueprintGen
 import SpherePacking.ModularForms.Eisenstein
 import SpherePacking.MagicFunction.IntegralParametrisations
 
@@ -70,6 +71,17 @@ def I₅ (x : V) : ℂ := I₅' (‖x‖ ^ 2)
 
 def I₆ (x : V) : ℂ := I₆' (‖x‖ ^ 2)
 
+/--
+For $x\in\R^8$ we define $$\begin{align}
+\label{eqn:a-definition}
+    a(x):=&\int\limits_{-1}^i\phi_0\Big(\frac{-1}{z+1}\Big)\,(z+1)^2\,e^{\pi i \|x\|^2 z}\,dz
+    +\int\limits_{1}^i\phi_0\Big(\frac{-1}{z-1}\Big)\,(z-1)^2\,e^{\pi i \|x\|^2 z}\,dz\\
+    -&2\int\limits_{0}^i\phi_0\Big(\frac{-1}{z}\Big)\,z^2\,e^{\pi i \|x\|^2 z}\,dz
+    +2\int\limits_{i}^{i\infty}\phi_0(z)\,e^{\pi i \|x\|^2 z}\,dz.\nonumber
+\end{align}$$
+-/
+@[blueprint
+  (uses := ["def:phi4-phi2-phi0"])]
 def a (x : V) : ℂ := a' (‖x‖ ^ 2)
 
 end Vector_Input

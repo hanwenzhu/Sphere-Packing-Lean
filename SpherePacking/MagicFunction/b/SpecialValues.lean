@@ -10,6 +10,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sidharth Hariharan
 -/
 
+import BlueprintGen
 import SpherePacking.MagicFunction.b.Schwartz
 
 open SchwartzMap Real Complex MagicFunction.FourierEigenfunctions
@@ -18,6 +19,11 @@ namespace MagicFunction.b.SpecialValues
 
 section Zero
 
+/-- We have $b(0) = 0$. -/
+@[blueprint
+  (uses := ["prop:b-another-integral"])
+  (proof := /-- These identities follow immediately from the previous proposition. -/)
+  (latexEnv := "proposition")]
 theorem b_zero : b 0 = 0 := by sorry
 
 end Zero

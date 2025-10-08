@@ -6,6 +6,7 @@ Authors: Sidharth Hariharan, Raphael Appenzeller
 
 -- import Mathlib
 
+import BlueprintGen
 import SpherePacking.ModularForms.JacobiTheta
 
 /-! # The ψ Functions
@@ -160,6 +161,16 @@ end aux
 
 /- We can now prove the main results of this section. Namely Lemma 7.16 in the blueprint -/
 
+/--
+More explicitly, we have $$\begin{align}
+    \psi_I(z) &= 128 \frac{H_3(z) + H_4(z)}{H_2(z)^2} + 128 \frac{H_4(z) - H_2(z)}{H_3(z)^2} \label{eqn:psiI-explicit} \\
+    \psi_T(z) &= 128 \frac{H_3(z) + H_4(z)}{H_2(z)^2} + 128 \frac{H_2(z) + H_3(z)}{H_4(z)^2} \label{eqn:psiT-explicit} \\
+    \psi_S(z) &= -128 \frac{H_2(z) + H_3(z)}{H_4(z)^2} - 128 \frac{H_2(z) - H_4(z)}{H_3(z)^2} \label{eqn:psiS-explicit}
+\end{align}$$
+-/
+@[blueprint
+  (uses := ["def:psiI-psiT-psiS"])
+  (latexEnv := "lemma")]
 lemma ψI_eq : ψI = 128 • ((H₃_MF + H₄_MF) / (H₂_MF ^ 2) + (H₄_MF - H₂_MF) / H₃_MF ^ 2) := by
   rw [ψI, h]
   conv_rhs => rw [smul_add]

@@ -1,3 +1,4 @@
+import BlueprintGen
 import Mathlib.NumberTheory.LSeries.Dirichlet
 import Mathlib.NumberTheory.ModularForms.EisensteinSeries.Basic
 
@@ -299,6 +300,25 @@ lemma EQ2 (k : ℕ) (hk : 3 ≤ (k : ℤ)) (z : ℍ) : ∑' (x : Fin 2 → ℤ),
 
 /-This result is already proven in the modular forms repo and being PRed (slowly) into mathlib, so
 we can use it freely here. -/
+attribute [blueprint
+  (statement := /--
+  For an even integer $k\geq 4$ we define the *weight $k$ Eisenstein series* as $$\begin{equation}
+  \label{eqn:Ek-definition}
+  E_k(z):=\frac{1}{2}\sum_{(c,d)\in\Z^2, (c,d)=1}(cz+d)^{-k}.
+  \end{equation}$$
+  -/)] ModularForm.eisensteinSeries_MF
+
+/--
+The Eisenstein series possesses the Fourier expansion $$\begin{equation}
+\label{eqn:Ek-Fourier}E_k(z)=1+\frac{2}{\zeta(1-k)}\sum_{n=1}^\infty \sigma_{k-1}(n)\,e^{2\pi i z}, 
+\end{equation}$$ where $\sigma_{k-1}(n)\,=\,\sum_{d|n} d^{k-1}$. In particular, we have
+$$\begin{align}
+  E_4(z)\,=\,& 1+240\sum_{n=1}^\infty \sigma_3(n)\,e^{2\pi i n z} \notag \\
+  E_6(z)\,=\,& 1-504\sum_{n=1}^\infty \sigma_5(n)\,e^{2\pi i n z}. \notag
+\end{align}$$
+-/
+@[blueprint
+  (latexEnv := "lemma")]
 lemma E_k_q_expansion (k : ℕ) (hk : 3 ≤ (k : ℤ)) (hk2 : Even k) (z : ℍ) :
     (E k hk) z = 1 +
         (1 / (riemannZeta (k))) * ((-2 * ↑π * Complex.I) ^ k / (k - 1)!) *

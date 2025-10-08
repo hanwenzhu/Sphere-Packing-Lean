@@ -3,6 +3,7 @@ Copyright (c) 2024 Gareth Ma. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Gareth Ma
 -/
+import BlueprintGen
 import Mathlib.Algebra.Module.ZLattice.Covolume
 import Mathlib.Dynamics.Ergodic.Action.Regular
 
@@ -671,6 +672,38 @@ open ZSpan
 variable (b : Basis ι ℤ S.lattice)
 
 -- Theorem 2.2 lower bound, in terms of fundamental domain of Z-lattice
+/--
+For all $R$, we have the following inequality relating the number of lattice points from $\Lambda$
+in a ball with the volume of the ball and the fundamental region $\mathcal{D}$:
+
+$$\frac{\mathrm{Vol}(\mathcal{B}_d(R - L))}{\mathrm{Vol}(\mathcal{D})}
+    \leq \left|\Lambda \cap \mathcal{B}_d(R)\right|
+    \leq \frac{\mathrm{Vol}(\mathcal{B}_d(R + L))}{\mathrm{Vol}(\mathcal{D})}$$
+-/
+@[blueprint
+  (proof := /--
+  For the first inequality, we notice that
+  $\bigcup_{x \in \Lambda \cap \mathcal{B}_d(R - L)} (x + \mathcal{D}) \subseteq \mathcal{B}_d(R)$,
+  because for $x \in \Lambda \cap \mathcal{B}_d(R - L)$ and $y \in x + \mathcal{D}$, we have
+  $\|x\| < R - L$ and $\|y - x\| \leq L$, so $\|y\| < R$ by triangle inequality. Intersecting both
+  sides with $X$ and simplifying, we have
+  
+  $$\left(\bigcup_{x \in \Lambda \cap \mathcal{B}_d(R - L)} (x + \mathcal{D})\right) \cap X = \bigcup_{x \in \Lambda \cap \mathcal{B}_d(R - L)} ((x + \mathcal{D}) \cap X) \subseteq \mathcal{B}_d(R) \cap X$$
+  
+  Consider the (finite) cardinality on both sides and noting that
+  $|(x + \mathcal{D}) \cap X| = |X / \Lambda|$ for all $x$, we see that
+  $|\Lambda \cap \mathcal{B}_d(R - L)||X / \Lambda| \leq |X \cap \mathcal{B}_d(R)|$, as desired.
+  
+  The proof of the second inequality is similar. We again observe that
+  $\mathcal{B}_d(R) \subseteq \bigcup_{x \in \Lambda \cap \mathcal{B}_d(R + L)} (x + \mathcal{D})$,
+  which follows from the tiling property of fundamental domain (i.e. every point can be translated by
+  a $\Lambda$ lattice point into $\mathcal{D}$). Intersecting both sides with $X$ and considering
+  cardinality of both sides concludes the proof.
+  
+  There are several technicalities when formalising in Lean, such as having to prove
+  $|\Lambda \cap \mathcal{B}_d(R)|$ is countable and finite. Those are handled at `aux3`.
+  -/)
+  (latexEnv := "lemma")]
 theorem PeriodicSpherePacking.aux2_ge'
     (hL : ∀ x ∈ fundamentalDomain (b.ofZLatticeBasis ℝ _), ‖x‖ ≤ L) (hd : 0 < d) :
     (↑S.lattice ∩ ball (0 : EuclideanSpace ℝ (Fin d)) R).encard
@@ -886,6 +919,18 @@ theorem Filter.map_add_atTop_eq {β : Type*} {f : ℝ → β} (C : ℝ) (α : Fi
     · simp [le_sub_iff_add_le]
     · simp [sub_add_cancel]
 
+/--
+For any constant $C > 0$, we have
+
+$$\lim_{R \to \infty} \frac{\mathrm{Vol}(\mathcal{B}_d(R))}{\mathrm{Vol}(\mathcal{B}_d(R + C))} = 1$$
+-/
+@[blueprint
+  (proof := /--
+  Write out the formula for volume of a ball and simplify. More specifically, we have
+  $\mathrm{Vol}(\mathcal{B}_d(R)) = R^d \pi^{d / 2} / \Gamma\left(\frac{d}{2} + 1\right)$, so
+  $\mathrm{Vol}(\mathcal{B}_d(R)) / \mathrm{Vol}(\mathcal{B}_d(R + C)) = R^d / (R + C)^d = \left(1 - \frac{1}{R + C}\right)^d = 1$.
+  -/)
+  (latexEnv := "lemma")]
 theorem volume_ball_ratio_tendsto_nhds_one'' {d : ℕ} {C C' : ℝ} (hd : 0 < d) :
     Tendsto (fun R ↦ volume (ball (0 : EuclideanSpace ℝ (Fin d)) (R + C))
       / volume (ball (0 : EuclideanSpace ℝ (Fin d)) (R + C'))) atTop (𝓝 1) := by
@@ -929,6 +974,27 @@ private lemma PeriodicSpherePacking.tendsto_finiteDensity
     · left
       exact one_ne_zero
 
+/--
+For a periodic sphere packing $\mathcal{P} = \mathcal{P}(X)$ with centers $X$ periodic to the
+lattice $\Lambda$ and separation $r$,
+
+$$\Delta_{\mathcal{P}} = |X / \Lambda| \cdot \frac{\Vol{\mathcal{B}_d(r / 2)}}{\Vol{\R^d / \Lambda}}$$
+-/
+@[blueprint
+  (proof := /--
+  Fix any fundamental domain $\mathcal{D}$ (induced by any basis) of the lattice $\Lambda$. Combining
+  `SpherePacking.finiteDensity_le`, `PeriodicSpherePacking.aux2_ge'` and
+  `PeriodicSpherePacking.aux2_ge'`, we get the following inequality for the *finite* density:
+  
+  $$|X / \Lambda| \cdot \frac{\Vol{\mathcal{B}_d(r / 2)}}{\Vol{\R^d / \Lambda}} \cdot \frac{\Vol{\mathcal{B}_d(R - r / 2 - 2L)}}{\Vol{\mathcal{B}_d(R)}}
+      \leq \Delta_{\mathcal{P}}(R)
+      \leq |X / \Lambda| \cdot \frac{\Vol{\mathcal{B}_d(r / 2)}}{\Vol{\R^d / \Lambda}} \cdot \frac{\Vol{\mathcal{B}_d(R + r / 2 + 2L)}}{\Vol{\mathcal{B}_d(R)}}$$
+  
+  Taking limit on both sides as $R \to \infty$ and apply the Sandwich theorem and
+  `volume_ball_ratio_tendsto_nhds_one''`, we get
+  
+  $$\Delta_{\mathcal{P}} = \limsup_{R \to \infty} \Delta_{\mathcal{P}}(R) = \lim_{R \to \infty} \Delta_{\mathcal{P}}(R) = |X / \Lambda| \cdot \frac{\Vol{\mathcal{B}_d(r / 2)}}{\Vol{\R^d / \Lambda}}$$
+  -/)]
 theorem PeriodicSpherePacking.density_eq
     (hL : ∀ x ∈ fundamentalDomain (b.ofZLatticeBasis ℝ _), ‖x‖ ≤ L) (hd : 0 < d) :
     S.density

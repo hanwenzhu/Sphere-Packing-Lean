@@ -3,6 +3,7 @@ Copyright (c) 2024 Sidharth Hariharan. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sidharth Hariharan, Gareth Ma
 -/
+import BlueprintGen
 import Mathlib.Algebra.Module.ZLattice.Basic
 import Mathlib.Data.Real.StarOrdered
 import Mathlib.Order.CompletePartialOrder
@@ -35,6 +36,19 @@ structure SpherePacking (d : ℕ) where
   separation_pos : 0 < separation := by positivity
   centers_dist : Pairwise (separation ≤ dist · · : centers → centers → Prop)
 
+attribute [blueprint
+  (statement := /--
+  We say that an additive subgroup $\Lambda \leq \R^d$ is a *lattice* if it is discrete and its
+  $\R$-span contains all the elements of $\R^d$.
+  -/)] IsZLattice
+
+/--
+We say that a sphere packing $\Pa(X)$ is ($\Lambda$-)*periodic* if there exists a lattice
+$\Lambda \subset \R^d$ such that for all $x \in X$ and $y \in \Lambda$, $x + y \in X$ (ie, $X$ is
+$\Lambda$-periodic).
+-/
+@[blueprint
+  (uses := ["SpherePacking"])]
 structure PeriodicSpherePacking (d : ℕ) extends SpherePacking d where
   lattice : Submodule ℤ (EuclideanSpace ℝ (Fin d))
   lattice_action : ∀ ⦃x y⦄, x ∈ lattice → y ∈ centers → x + y ∈ centers
@@ -92,12 +106,31 @@ theorem PeriodicSpherePacking.addAction_vadd (S : PeriodicSpherePacking d)
       x +ᵥ y = ⟨x.val + y.val, S.lattice_action x.prop y.prop⟩ :=
   rfl
 
+/--
+Given a set $X \subset \R^d$ and a real number $r > 0$ (known as the *separation radius*) such that
+$\|x - y\| \geq r$ for all distinct $x, y \in X$, we define the *sphere packing* $\Pa(X)$ with
+centres at $X$ to be the union of all open balls of radius $r$ centred at points in $X$:
+$$\Pa(X) := \bigcup_{x \in X} B_d(x, r)$$
+-/
+@[blueprint]
 abbrev SpherePacking.balls (S : SpherePacking d) : Set (EuclideanSpace ℝ (Fin d)) :=
   ⋃ x : S.centers, ball (x : EuclideanSpace ℝ (Fin d)) (S.separation / 2)
 
+/--
+The *finite density* of a packing $\mathcal{P}$ is defined as
+$$\Delta_{\mathcal{P}}(R):=\frac{\mathrm{Vol}(\mathcal{P}\cap B_d(0,R))}{\mathrm{Vol}(B_d(0,R))},\quad R>0.$$
+-/
+@[blueprint
+  (uses := ["SpherePacking"])]
 noncomputable def SpherePacking.finiteDensity (S : SpherePacking d) (R : ℝ) : ℝ≥0∞ :=
   volume (S.balls ∩ ball 0 R) / (volume (ball (0 : EuclideanSpace ℝ (Fin d)) R))
 
+/--
+We define the *density* of a packing $\mathcal{P}$ as the limit superior
+$$\Delta_{\mathcal{P}}:=\limsup\limits_{R\to\infty}\Delta_{\mathcal{P}}(R).$$
+-/
+@[blueprint
+  (uses := ["SpherePacking"])]
 noncomputable def SpherePacking.density (S : SpherePacking d) : ℝ≥0∞ :=
   limsup S.finiteDensity atTop
 
@@ -136,6 +169,13 @@ open Real
 
 -- Unfortunately I can't define a SMul ℝ (SpherePacking d) because we require 0 < c
 -- Perhaps we can define a monoid action instead - Sid
+/--
+Given a sphere packing $\Pa(X)$ with separation radius $r$, we defined the *scaled packing* with
+respect to a real number $c > 0$ to be the packing $\Pa(cX)$, where $cX = \setof{cx \in V}{x \in X}$
+has separation radius $cr$.
+-/
+@[blueprint
+  (uses := ["SpherePacking"])]
 def SpherePacking.scale (S : SpherePacking d) {c : ℝ} (hc : 0 < c) : SpherePacking d where
   centers := c • S.centers
   separation := c * S.separation
@@ -245,8 +285,15 @@ periodic packings. See also `<TODO>` for specifying the separation radius of the
 def PeriodicSpherePackingConstant (d : ℕ) : ℝ≥0∞ :=
   ⨆ S : PeriodicSpherePacking d, S.density
 
-/-- The `SpherePackingConstant` in dimension d is the supremum of the density of all packings. See
-also `<TODO>` for specifying the separation radius of the packings. -/
+/--
+The *sphere packing constant* is defined as supremum of packing densities over all possible
+packings:
+$$\Delta_d:=\sup\limits_{\substack{\mathcal{P}\subset\R^d\\ \scriptscriptstyle\mathrm{sphere}\;\mathrm{packing}}}\Delta_{\mathcal{P}}.$$
+
+The `SpherePackingConstant` in dimension d is the supremum of the density of all packings. See
+also `<TODO>` for specifying the separation radius of the packings.
+-/
+@[blueprint]
 def SpherePackingConstant (d : ℕ) : ℝ≥0∞ :=
   ⨆ S : SpherePacking d, S.density
 
@@ -268,8 +315,22 @@ lemma density_le_one {d : ℕ} (S : SpherePacking d) : S.density ≤ 1 := by
   intro
   exact finiteDensity_le_one _ _
 
-/-- Finite density of a scaled packing. -/
-@[simp]
+/--
+Let $\Pa(X)$ be a sphere packing and $c$ a positive real number. Then, for all $R > 0$,
+$$\Delta_{\Pa(cX)}(cR) = \Delta_{\Pa(X)}(R).$$
+
+Finite density of a scaled packing.
+-/
+@[simp, blueprint
+  (proof := /--
+  The proof follows by direct computation:
+  $$\Delta_{\Pa(cX)}(cR) = \frac{\Vol{\Pa(cX) \cap B_d(0, cR)}}{\Vol{B_d(0, cR)}} = \frac{c^d \cdot \Vol{\Pa(X) \cap B_d(0, R)}}{c^d \cdot \Vol{B_d(0, R)}}
+      % = \frac{\Vol{\Pa(X) \cap B_d(0, R)}}{\Vol{B_d(0, R)}}
+      = \Delta_{\Pa(X)}(R)$$ where the second equality follows from applying the fact that scaling a
+  (measurable) set by a factor of $c$ scales its volume by a factor of $c^d$ to the fact that
+  $\Pa(cX) \cap B_d(0, cR) = c \cdot (\Pa(X) \cap B_d(0, cR))$.
+  -/)
+  (latexEnv := "lemma")]
 lemma scale_finiteDensity {d : ℕ} (_ : 0 < d) (S : SpherePacking d) {c : ℝ} (hc : 0 < c) (R : ℝ) :
     (S.scale hc).finiteDensity (c * R) = S.finiteDensity R := by
   -- haveI : Nonempty (Fin d) := Fin.pos_iff_nonempty.mp hd -- (_ : 0 < d) unnecessary
@@ -290,7 +351,22 @@ lemma scale_finiteDensity' {d : ℕ} (hd : 0 < d) (S : SpherePacking d) {c : ℝ
   rw [div_eq_mul_inv, ← scale_finiteDensity hd S hc, ← mul_assoc, mul_comm, ← mul_assoc,
     inv_mul_cancel₀ hc.ne.symm, one_mul]
 
-/-- Density of a scaled packing. -/
+/--
+Let $\Pa(X)$ be a sphere packing and $c$ a positive real number. Then, the density of the scaled
+packing $\Pa(cX)$ is equal to the density of the original packing $\Pa(X)$.
+
+Density of a scaled packing.
+-/
+@[blueprint
+  (proof := /--
+  One can show, using relatively unsophisticated real analysis, that
+  $$\limsup_{R \to \infty} \Delta_{\Pa(cX)}(R) = \limsup_{cR \to \infty} \Delta_{\Pa(cX)}(cR)$$ Lemma
+  `SpherePacking.scale_finiteDensity` tells us that $\Delta_{\Pa(cX)}(cR) = \Delta_{\Pa(X)}(R)$ for
+  every $R > 0$. Therefore,
+  $$\limsup_{cR \to \infty} \Delta_{\Pa(cX)}(cR) = \limsup_{cR \to \infty} \Delta_{\Pa(X)}(R) = \limsup_{R \to \infty} \Delta_{\Pa(X)}(R)$$
+  where the second equality is the result of a similar change of variables to the one done above.
+  -/)
+  (latexEnv := "lemma")]
 lemma scale_density {d : ℕ} (hd : 0 < d) (S : SpherePacking d) {c : ℝ} (hc : 0 < c) :
     (S.scale hc).density = S.density := by
   simp only [density, limsup, limsSup, eventually_map, eventually_atTop]
@@ -315,6 +391,17 @@ lemma scale_density {d : ℕ} (hd : 0 < d) (S : SpherePacking d) {c : ℝ} (hc :
     apply ha
     exact (div_le_iff₀' hc).mp hb'
 
+/-- $$\Delta_d = \sup\limits_{\substack{\Pa \subset \R^d \\ \text{sphere packing} \\ \text{sep. rad.} = 1}} \Delta_{\Pa}$$ -/
+@[blueprint
+  (proof := /--
+  That the supremum over packings of unit density is at most the sphere packing constant is obvious.
+  For the reverse inequality, let $\Pa(X)$ be any sphere packing with separation radius $r$. We know,
+  from Lemma `SpherePacking.scale_density`, that the density of $\Pa(X)$ is equal to that of the
+  scaled packing $\Pa\!\left(\frac{X}{r}\right)$. Since the scaled packing has separation radius $1$,
+  its density is naturally at most the supremum over all packings of unit density, meaning that the
+  same is true of $\Pa(X)$.
+  -/)
+  (latexEnv := "lemma")]
 theorem constant_eq_constant_normalized {d : ℕ} (hd : 0 < d) :
     SpherePackingConstant d = ⨆ (S : SpherePacking d) (_ : S.separation = 1), S.density := by
   rw [iSup_subtype', SpherePackingConstant]
@@ -451,6 +538,21 @@ theorem SpherePacking.finiteDensity_ge (hd : 0 < d) (R : ℝ) :
   · exact (volume_ball_pos _ (by linarith [S.separation_pos])).ne.symm
   · exact (volume_ball_lt_top _).ne
 
+/--
+For any $R > 0$,
+$$\left|X \cap \mathcal{B}_d\left(R - \frac{r}{2}\right)\right| \cdot \frac{\mathrm{Vol}\left(\mathcal{B}_d\left(\frac{r}{2}\right)\right)}{\mathrm{Vol}(\mathcal{B}_d(R))}
+    \leq \Delta_{\mathcal{P}}(R)
+    \leq \left|X \cap \mathcal{B}_d\left(R + \frac{r}{2}\right)\right| \cdot \frac{\mathrm{Vol}\left(\mathcal{B}_d\left(\frac{r}{2}\right)\right)}{\mathrm{Vol}(\mathcal{B}_d(R))}$$
+-/
+@[blueprint
+  (proof := /--
+  The high level idea is to prove that
+  $\mathcal{P} \cap \mathcal{B}_d(R) = \left(\bigcup_{x \in X} \mathcal{B}_d\left(x, \frac{r}{2}\right)\right) \subseteq \bigcup_{x \in X \cap \mathcal{B}_d\left(R + \frac{r}{2}\right)} \mathcal{B}_d\left(x, \frac{r}{2}\right)$,
+  and a similar inequality for the upper bound. The rest follows by rearranging and using the fact
+  that the balls are pairwise disjoint.
+  -/)
+  (proofUses := ["SpherePacking"])
+  (latexEnv := "lemma")]
 theorem SpherePacking.finiteDensity_le (hd : 0 < d) (R : ℝ) :
     S.finiteDensity R
       ≤ (S.centers ∩ ball 0 (R + S.separation / 2)).encard

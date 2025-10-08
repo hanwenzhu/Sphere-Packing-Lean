@@ -1,3 +1,4 @@
+import BlueprintGen
 import SpherePacking.ModularForms.SlashActionAuxil
 import SpherePacking.ModularForms.clog_arg_lems
 import SpherePacking.ModularForms.eta
@@ -40,6 +41,10 @@ lemma Delta_eq_eta_pow (z : ℍ) : Δ z = (η z) ^ 24 := by
 
 
 /-This should be easy from the definition and the Mulitpliable bit. -/
+/-- $\Delta(z) \neq 0$ for all $z \in \h$. -/
+@[blueprint
+  (proof := /-- This follows from the product formula. -/)
+  (latexEnv := "corollary")]
 lemma Δ_ne_zero (z : UpperHalfPlane) : Δ z ≠ 0 := by
   rw [Delta_eq_eta_pow]
   simpa using eta_nonzero_on_UpperHalfPlane z
@@ -299,6 +304,19 @@ lemma Discriminant_zeroAtImInfty (γ : SL(2, ℤ)) : IsZeroAtImInfty
     exact tendsto_comap
   · apply Delta_boundedfactor
 
+/--
+The *discriminant form* $\Delta(z)$ is given by $$\begin{equation}
+\label{eqn:disc-definition}
+\Delta(z) = e^{2 \pi i z} \prod_{n \ge 1} (1 - e^{2 \pi i n z})^{24}.
+\end{equation}$$
+-/
+@[blueprint
+  (proof := /--
+  The fact that it is invariant under translation is clear from the definition, so we only need to
+  check transformation under $S$. Now, note that $\eta^{24} = \Delta$, and from `eta_equality` we have
+  $\eta(-1/z) = \sqrt{-iz} \eta(z)$, so $\Delta(-1/z) = z^{12} \Delta(z)$ as required.
+  -/)
+  (latexEnv := "definition")]
 def Delta : CuspForm (CongruenceSubgroup.Gamma 1) 12 where
   toFun := Discriminant_SIF
   slash_action_eq' := Discriminant_SIF.slash_action_eq'
@@ -452,6 +470,10 @@ lemma Delta_im_line_im_part {t : ℝ} (ht : 0 < t) : (Delta ⟨(Complex.I * t), 
   rw [Delta_apply, Δ]
   sorry
 
+/-- $\Delta(it) > 0$ for all $t > 0$. -/
+@[blueprint
+  (proof := /-- By `Delta`, we have $$\Delta(it) = e^{-2 \pi t} \prod_{n \ge 1} (1 - e^{-2 \pi n t})^{24} > 0.$$ -/)
+  (latexEnv := "corollary")]
 lemma Delta_im_line {t : ℝ} (ht : 0 < t) : 0 < ‖Delta ⟨(Complex.I * t), by simp [ht]⟩‖ := by
   rw [Delta_apply, Δ, norm_mul]
   simp_rw [Complex.norm_exp]

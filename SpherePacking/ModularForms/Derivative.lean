@@ -1,3 +1,4 @@
+import BlueprintGen
 import SpherePacking.ModularForms.Eisenstein
 
 open UpperHalfPlane hiding I
@@ -10,6 +11,13 @@ Definition of (Serre) derivative of modular forms.
 Prove Ramanujan's formulas on derivatives of Eisenstein series.
 -/
 
+/--
+Let $F$ be a quasimodular form. We define the (normalized) derivative of $F$ as $$\begin{equation}
+\label{eqn:derivative}
+    F' = DF := \frac{1}{2\pi i} \frac{\dd}{\dd z} F.
+\end{equation}$$
+-/
+@[blueprint]
 noncomputable def D (F : ℍ → ℂ) : ℍ → ℂ :=
   fun (z : ℍ) => (2 * π * I)⁻¹ * ((deriv (F ∘ ofComplex)) z)
 
@@ -137,8 +145,15 @@ theorem D_const (c : ℂ) (z : ℍ) : D (Function.const _ c) z = 0 := by
 
 
 /--
+For $k \in \mathbb{R}$, define the weight $k$ Serre derivative $\partial_{k}$ of a modular form $F$
+as $$\begin{equation}
+\label{eqn:serre-der}
+    \partial_{k}F := F' - \frac{k}{12} E_2 F.
+\end{equation}$$
+
 Serre derivative of weight `k`.
 -/
+@[blueprint]
 noncomputable def serre_D (k : ℂ) : (ℍ → ℂ) → (ℍ → ℂ) :=
   fun (F : ℍ → ℂ) => (fun z => D F z - k * 12⁻¹ * E₂ z * F z)
 
@@ -157,6 +172,21 @@ theorem serre_D_smul (k : ℤ) (c : ℂ) (F : ℍ → ℂ) (hF : MDifferentiable
   simp
   ring_nf
 
+/--
+The Serre derivative satisfies the following product rule: for any quasimodular forms $F$ and $G$,
+$$\begin{equation}
+    \partial_{w_1 + w_2} (FG) = (\partial_{w_1}F)G + F (\partial_{w_2}G).
+\end{equation}$$
+-/
+@[blueprint
+  (proof := /--
+  It follows from the definition: $$\begin{align}
+      \partial_{w_1 + w_2} (FG) &= (FG)' - \frac{w_1 + w_2}{12} E_2 (FG) \\
+      &= F'G + FG' - \frac{w_1 + w_2}{12} E_2(FG) \\
+      &= \left(F' - \frac{w_1}{12}E_2 F\right)G + F \left(G' - \frac{w_2}{12}E_2 G\right) \\
+      &= (\partial_{w_1}F)G + F(\partial_{w_2}G).
+  \end{align}$$
+  -/)]
 theorem serre_D_mul (k₁ k₂ : ℤ) (F G : ℍ → ℂ) (hF : MDifferentiable 𝓘(ℂ) 𝓘(ℂ) F)
     (hG : MDifferentiable 𝓘(ℂ) 𝓘(ℂ) G) (z : ℍ) :
     serre_D (k₁ + k₂) (F * G) z = F z * serre_D k₁ G z + G z * serre_D k₂ F z := by
@@ -166,13 +196,45 @@ theorem serre_D_mul (k₁ k₂ : ℤ) (F G : ℍ → ℂ) (hF : MDifferentiable 
 
 
 /--
+Serre derivative $\partial_{k}$ is equivariant with the slash action of
+$\mathrm{SL}_{2}(\mathbb{Z})$ in the following sense: $$\begin{equation}
+    \partial_{k} (F|_{k}\gamma) = (\partial_{k} F)|_{k+2}\gamma, \quad \forall \gamma \in \mathrm{SL}_{2}(\mathbb{Z}).
+\end{equation}$$
+
 Serre derivative is equivariant under the slash action. More precisely, if `F` is invariant
 under the slash action of weight `k`, then `serre_D k F` is invariant under the slash action
 of weight `k + 2`.
 -/
+@[blueprint
+  (proof := /--
+  Let $G = \partial_{k}F = F' - \frac{k}{12}E_2 F$. From $F \in M_k(\Gamma)$, we have
+  $$\begin{equation}
+      (F|_{k}\gamma)(z) := (cz + d)^{-k} F\left(\frac{az + b}{cz + d}\right), \quad \gamma = \begin{pmatrix}a & b \\ c & d\end{pmatrix} \in \Gamma.
+  \end{equation}$$ By taking the derivative of the above equation, we get $$\begin{align}
+      \frac{\dd}{\dd z}(F|_{k} \gamma)(z) &= -kc (cz + d)^{-k - 1} F\left(\frac{az + b}{cz + d}\right) + (cz + d)^{-k} (cz + d)^{-2} \frac{\dd F}{\dd z}\left(\frac{az + b}{cz + d}\right) \\
+      &= -kc (cz + d)^{-k - 1} F\left(\frac{az + b}{cz + d}\right) + (cz + d)^{-k - 2} \frac{\dd F}{\dd z}\left(\frac{az + b}{cz + d}\right) \\
+      &= -kc (cz + d)^{-k - 1} F\left(\frac{az + b}{cz + d}\right) + 2 \pi i (cz + d)^{-k - 2} F'\left(\frac{az + b}{cz + d}\right) \\
+      \Leftrightarrow (F|_{k} \gamma)'(z) &= -\frac{kc}{2 \pi i} (cz + d)^{-k - 1} F\left(\frac{az + b}{cz + d}\right) + (cz + d)^{-k - 2} F'\left(\frac{az + b}{cz + d}\right).
+  \end{align}$$ Combined with \ref{eqn:E2-transform-general}, we get
+  $$\begin{align}
+      ((\partial_k F)|_{k+2}\gamma)(z) &= (cz + d)^{-k-2} \left(F'\left(\frac{az + b}{cz + d}\right) - \frac{k}{12}E_2\left(\frac{az + b}{cz + d}\right)F\left(\frac{az + b}{cz + d}\right)\right) \\
+      &= (cz + d)^{-k-2} F'\left(\frac{az + b}{cz + d}\right) - \frac{k}{12} \left(E_2(z) - \frac{6ic}{\pi(cz + d)}\right) \cdot (cz + d)^{-k} F\left(\frac{az + b}{cz + d}\right) \\
+      &= (F|_{k}\gamma)'(z) - \frac{k}{12} E_2(z) (F|_{k}\gamma)(z) \\
+      &= \partial_{k} (F|_{k}\gamma)(z).
+  \end{align}$$
+  -/)]
 theorem serre_D_slash_equivariant (k : ℤ) (F : ℍ → ℂ) (hF : MDifferentiable 𝓘(ℂ) 𝓘(ℂ) F) :
     ∀ γ : SL(2, ℤ), serre_D k F ∣[k + 2] γ = serre_D k (F ∣[k] γ) := by sorry
 
+/--
+Let $F$ be a modular form of weight $k$ and level $\Gamma$. Then, $\partial_{k}F$ is a modular form
+of weight $k + 2$ of the same level.
+-/
+@[blueprint
+  (proof := /--
+  Immediate from Theorem `serre_D_slash_equivariant` since $F|_k\gamma = F$ for all
+  $\gamma \in \Gamma$.
+  -/)]
 theorem serre_D_slash_invariant (k : ℤ) (F : ℍ → ℂ) (hF : MDifferentiable 𝓘(ℂ) 𝓘(ℂ) F)
     (γ : SL(2, ℤ)) (h : F ∣[k] γ = F) :
     serre_D k F ∣[k + 2] γ = serre_D k F := by
@@ -189,7 +251,33 @@ theorem ramanujan_E₄' : serre_D 4 E₄.toFun = - 3⁻¹ * E₆.toFun := by sor
 
 theorem ramanujan_E₆' : serre_D 6 E₆.toFun = - 2⁻¹ * E₄.toFun * E₄.toFun := by sorry
 
-@[simp]
+/--
+We have $$\begin{align}
+    E_2' &= \frac{E_2^2 - E_4}{12} \label{eqn:DE2} \\
+    E_4' &= \frac{E_2 E_4 - E_6}{3} \label{eqn:DE4} \\
+    E_6' &= \frac{E_2 E_6 - E_4^2}{2} \label{eqn:DE6}
+\end{align}$$
+-/
+@[simp, blueprint
+  (uses := ["cor:dim-mf"])
+  (proof := /--
+  In terms of Serre derivatives, these are equivalent to $$\begin{align}
+      \partial_{1}E_2 &= -\frac{1}{12} E_4 \label{eqn:SE2} \\
+      \partial_{4}E_4 &= -\frac{1}{3} E_6 \label{eqn:SE4} \\
+      \partial_{6}E_6 &= -\frac{1}{2} E_4^2 \label{eqn:SE6}
+  \end{align}$$ By Theorem `serre_D_slash_invariant`, all the Serre derivatives are, in fact, modular.
+  To be precise, the modularity of $\partial_{4} E_4$ and $\partial_6 E_6$ directly follows from
+  Theorem `serre_D_slash_invariant`, and that of $\partial_{1}E_2$ follows from
+  \ref{eqn:E2-transform-general}. Differentiating and squaring then gives
+  us the following: $$\begin{align}
+      E_2'|_{4}\gamma &= E_2' - \frac{ic}{\pi(cz + d)} E_2 - \frac{3c^2}{\pi^2 (cz + d)^2} \label{eqn:DE2-transform} \\
+      E_2^2|_{4}\gamma &= E_2^2 - \frac{12ic}{\pi(cz + d)} E_2 - \frac{36c^2}{\pi^2 (cz + d)^2} \label{eqn:E2sq-transform}
+  \end{align}$$ Hence,
+  \ref{eqn:DE2}$-\frac{1}{12}$\ref{eqn:E2sq-transform} is a modular
+  form of weight 4. By \ref{cor:dim-mf}, they should be multiples of $E_4, E_6, E_4^2$,
+  and the proportionality constants can be determined by observing the constant terms of
+  $q$-expansions.
+  -/)]
 theorem ramanujan_E₂ : D E₂ = 12⁻¹ * (E₂ * E₂ - E₄.toFun) := by
   ext z
   have h := ramanujan_E₂'

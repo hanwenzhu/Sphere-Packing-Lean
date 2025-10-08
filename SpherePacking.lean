@@ -83,3 +83,61 @@ import SpherePacking.ModularForms.upperhalfplane
 import SpherePacking.Tactic.NormNumI
 import SpherePacking.Tactic.NormNumI_Scratch
 import SpherePacking.Tactic.Test.NormNumI
+import BlueprintGen
+
+attribute [blueprint
+  (statement := /--
+  The *dual lattice* of a lattice $\Lambda$ is the set
+  $$\Lambda^* := \setof{v \in \R^d}{\forall l \in \Lambda, \left\langle v,l \right\rangle \in \Z}$$
+  -/)] LinearMap.BilinForm.dualSubmodule
+
+attribute [blueprint
+  (statement := /--
+  A $C^\infty$ function $f:\R^d\to\C$ is called a *Schwartz function* if it decays to zero as
+  $\|x\|\to\infty$ faster then any inverse power of $\|x\|$, and the same holds for all partial
+  derivatives of $f$, ie, if for all $k, n \in \N$, there exists a constant $C \in \R$ such that for
+  all $x \in \R^d$, $\norm{x}^k \cdot \norm{f^{(n)}(x)} \leq C$, where $f^{(n)}$ denotes the $n$-th
+  derivative of $f$ considered along with the appropriate operator norm. The set of all Schwartz
+  functions from $\R^d$ to $\C$ is called the *Schwartz space*. It is an $\R$-vector space.
+  -/)] SchwartzMap
+
+attribute [blueprint
+  (uses := [SchwartzMap, Real.fourierIntegral])
+  (proof := /--
+  We do not elaborate here as the result already exists in Mathlib. We do, however, mention that the
+  Lean implementation *defines* a continuous linear equivalence on the Schwartz space *using* the
+  Fourier transform (see `SchwartzMap.fourierTransformCLM`). The 'proof' that for any Schwartz
+  function $f$, its Fourier transform and its image under this continuous linear equivalence are,
+  indeed, the same $\R^d \to \R$ function, is stated in Mathlib solely for the purpose of `rw` and
+  `simp` tactics, and is proven simply by `rfl`.
+  -/)
+  (latexEnv := "lemma")] SchwartzMap.fourierTransformCLM
+
+attribute [blueprint
+  (statement := /--
+  The *automorphy factor* of weight $k$ is defined as
+  $$j_k(z,\left(\begin{smallmatrix}a&b\\c&d\end{smallmatrix}\right)):=(cz+d)^{-k}.$$
+  -/)] UpperHalfPlane.denom
+
+attribute [blueprint
+  (statement := /--
+  The automorphy factor satisfies the *chain rule*
+  $$j_k(z,\gamma_1\gamma_2)=j_k(z,\gamma_1)\,j_k(\gamma_2z,\gamma_1).$$
+  -/)
+  (uses := [UpperHalfPlane.denom])
+  (latexEnv := "lemma")] UpperHalfPlane.denom_cocycle
+
+attribute [blueprint
+  (statement := /--
+  For all $k$, $E_k\in M_k(\Gamma_1)$. Especially, we have $$\begin{equation}
+  \label{eqn:Ek-trans-S}
+      E_k \left(-\frac{1}{z}\right) = z^k E_k(z).
+  \end{equation}$$
+  -/)
+  (uses := [ModularForm.eisensteinSeries_MF, ModularForm])
+  (proof := /--
+  This follows from the fact that the sum converges absolutely. Now apply slash operator with
+  $\gamma = \left(\begin{smallmatrix} 0 & -1 \\ 1 & 0 \end{smallmatrix}\right)$ gives
+  \ref{eqn:Ek-trans-S}.
+  -/)
+  (latexEnv := "lemma")] EisensteinSeries.eisensteinSeries_SIF
