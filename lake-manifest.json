@@ -25,7 +25,7 @@
    "type": "git",
    "subDir": null,
    "scope": "hanwenzhu",
-   "rev": "edf199fa3cb0a30476e5370d8385fa41c5124642",
+   "rev": "51bc77833c0e07ca35e912d972df31e78302c9f2",
    "name": "«blueprint-gen»",
    "manifestFile": "lake-manifest.json",
    "inputRev": "main",
